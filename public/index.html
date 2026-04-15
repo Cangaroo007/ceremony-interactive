@@ -610,8 +610,6 @@ function Projection({ go }) {
           const txt = transcript.trim();
           if (!txt || txt === lastTextRef.current) continue;
           const isJa = /[\u3040-\u30ff\u4e00-\u9fff]/.test(txt);
-          const isEn = /^[\x00-\x7F]*$/.test(txt) && /[A-Za-z]/.test(txt);
-          if (!isJa && !isEn) continue;
           lastTextRef.current = txt;
           setInterim('');
           const srcLang = isJa ? 'ja' : 'en';
