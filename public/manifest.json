@@ -1,0 +1,9 @@
+{
+  "name": "Wedding Translator",
+  "short_name": "Wedding 🌸",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#C9A44C",
+  "background_color": "#0C0B0A",
+  "icons": []
+}

@@ -1,0 +1,13 @@
+{
+  "name": "wedding-translator",
+  "version": "1.0.0",
+  "description": "Real-time wedding ceremony translation app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "@anthropic-ai/sdk": "^0.24.0"
+  }
+}

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Wedding Translator 🌸</title>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#C9A44C" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet" />
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  :root {
+    --gold: #C9A44C;
+    --gold-soft: #E5C77A;
+    --dark: #0C0B0A;
+    --dark-2: #1A1715;
+    --cream: #F7F0E6;
+    --ivory: #FBF6EE;
+    --rose: #D8A8A0;
+  }
+  * { box-sizing: border-box; }
+  html, body, #root {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    font-family: 'Cormorant Garamond', serif;
+    background: var(--ivory);
+    color: var(--dark);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+  .fade-in { animation: fadeIn 0.6s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes slideFade { 0% { opacity: 0; transform: scale(1.02); } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes pulseDot { 0%,100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+  @keyframes bloom { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
+
+  /* ---------- HOME ---------- */
+  .home {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(216,168,160,0.25), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(201,164,76,0.22), transparent 42%),
+      linear-gradient(180deg, #FBF6EE 0%, #F3E7D4 100%);
+    padding: 48px 24px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .home-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 7vw, 72px);
+    color: var(--dark);
+    letter-spacing: 0.02em;
+    margin: 24px 0 8px;
+    text-align: center;
+  }
+  .home-title em { color: var(--gold); font-style: italic; }
+  .home-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: #7a6a52;
+    margin-bottom: 36px;
+    text-align: center;
+  }
+  .flower-divider {
+    display: flex; align-items: center; gap: 16px;
+    margin: 8px 0 32px;
+    color: var(--gold);
+    font-size: 24px;
+  }
+  .flower-divider::before, .flower-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    min-width: 80px;
+  }
+  .qr-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 20px 50px -20px rgba(100,80,40,0.25), 0 4px 12px rgba(100,80,40,0.08);
+    margin-bottom: 40px;
+    border: 1px solid rgba(201,164,76,0.25);
+  }
+  .qr-card canvas { display: block; }
+  .qr-caption {
+    font-style: italic; color: #7a6a52; font-size: 18px; margin-top: 12px; text-align: center;
+  }
+  .role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+  }
+  .role-card {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(201,164,76,0.4);
+    border-radius: 16px;
+    padding: 32px 24px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  .role-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -14px rgba(100,80,40,0.3);
+    border-color: var(--gold);
+  }
+  .role-icon { font-size: 40px; margin-bottom: 14px; }
+  .role-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .role-desc { font-style: italic; color: #7a6a52; font-size: 17px; line-height: 1.4; }
+
+  /* ---------- PROJECTION ---------- */
+  .projection {
+    height: 100vh; width: 100vw;
+    background: var(--dark);
+    color: var(--cream);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  .slideshow {
+    flex: 0 0 55%;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1.4s ease;
+  }
+  .slide.active { opacity: 1; }
+  .slide-empty {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 32px;
+    color: rgba(247,240,230,0.3);
+  }
+  .slide-nav {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(201,164,76,0.5);
+    color: var(--gold);
+    font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s;
+    z-index: 3;
+  }
+  .slide-nav:hover { background: rgba(201,164,76,0.3); }
+  .slide-nav.prev { left: 20px; }
+  .slide-nav.next { right: 20px; }
+  .slide-dots {
+    position: absolute; bottom: 16px; left: 0; right: 0;
+    display: flex; justify-content: center; gap: 8px;
+    z-index: 3;
+  }
+  .slide-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(247,240,230,0.35);
+    transition: all 0.3s;
+  }
+  .slide-dot.active {
+    background: var(--gold);
+    width: 24px; border-radius: 4px;
+  }
+
+  .translation-panel {
+    flex: 1;
+    padding: 40px 72px;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 28px;
+    background: linear-gradient(180deg, #0C0B0A 0%, #14110E 100%);
+    border-top: 1px solid rgba(201,164,76,0.3);
+    position: relative;
+  }
+  .translation-panel::before {
+    content: '❦';
+    position: absolute;
+    top: -14px; left: 50%; transform: translateX(-50%);
+    background: var(--dark);
+    color: var(--gold);
+    padding: 0 18px;
+    font-size: 22px;
+  }
+  .tx-line { animation: fadeIn 0.8s ease; }
+  .tx-original {
+    font-size: clamp(28px, 3.2vw, 44px);
+    line-height: 1.4;
+    color: rgba(247,240,230,0.75);
+    font-weight: 400;
+  }
+  .tx-original.ja { font-family: 'Noto Serif JP', serif; }
+  .tx-original.en { font-family: 'Playfair Display', serif; font-style: italic; }
+  .tx-translated {
+    font-size: clamp(34px, 3.8vw, 56px);
+    line-height: 1.35;
+    color: var(--cream);
+    font-weight: 400;
+  }
+  .tx-translated.ja { font-family: 'Noto Serif JP', serif; font-weight: 600; }
+  .tx-translated.en { font-family: 'Playfair Display', serif; }
+  .tx-waiting {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(26px, 3vw, 38px);
+    color: rgba(201,164,76,0.6);
+  }
+
+  .gear-btn {
+    position: fixed; bottom: 20px; right: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(201,164,76,0.15);
+    border: 1px solid rgba(201,164,76,0.4);
+    color: var(--gold);
+    font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    transition: all 0.3s;
+  }
+  .gear-btn:hover { background: rgba(201,164,76,0.3); transform: rotate(60deg); }
+
+  .op-panel {
+    position: fixed;
+    bottom: 74px; right: 20px;
+    background: rgba(20,17,14,0.96);
+    border: 1px solid rgba(201,164,76,0.4);
+    border-radius: 14px;
+    padding: 20px;
+    width: 320px;
+    z-index: 101;
+    color: var(--cream);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease;
+  }
+  .op-panel h3 {
+    margin: 0 0 14px;
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 20px;
+    font-weight: 400;
+  }
+  .mic-btn {
+    width: 100%; padding: 14px;
+    border-radius: 10px;
+    background: var(--gold);
+    color: var(--dark);
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+    transition: all 0.25s;
+    margin-bottom: 12px;
+  }
+  .mic-btn:hover { background: var(--gold-soft); }
+  .mic-btn.listening {
+    background: var(--rose);
+    animation: pulseDot 1.4s infinite;
+  }
+  .lang-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(201,164,76,0.2);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--gold);
+    margin-bottom: 10px;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .interim {
+    font-style: italic;
+    font-size: 14px;
+    color: rgba(247,240,230,0.5);
+    min-height: 20px;
+    padding: 8px;
+    border-left: 2px solid rgba(201,164,76,0.3);
+    margin-bottom: 10px;
+  }
+  .photo-count {
+    font-size: 13px;
+    color: rgba(247,240,230,0.6);
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* ---------- UPLOAD ---------- */
+  .upload {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(216,168,160,0.3), transparent 50%),
+      radial-gradient(circle at 80% 90%, rgba(201,164,76,0.25), transparent 50%),
+      linear-gradient(180deg, #FBF6EE 0%, #F3E7D4 100%);
+    padding: 32px 20px 60px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .up-back {
+    align-self: flex-start;
+    color: #7a6a52;
+    font-size: 17px;
+    font-style: italic;
+  }
+  .up-header {
+    text-align: center; margin: 20px 0 30px;
+  }
+  .up-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px; color: var(--dark);
+    margin: 10px 0 4px;
+  }
+  .up-sub { font-style: italic; color: #7a6a52; font-size: 19px; }
+  .up-dropzone {
+    width: 100%; max-width: 440px;
+    aspect-ratio: 1;
+    border: 2px dashed var(--gold);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.6);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 12px;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .up-dropzone:hover { background: rgba(255,255,255,0.85); transform: scale(1.01); }
+  .up-dropzone .icon { font-size: 64px; }
+  .up-dropzone .label {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+  }
+  .up-dropzone .hint { font-style: italic; color: #7a6a52; font-size: 17px; }
+  .up-success {
+    animation: bloom 0.6s ease;
+    font-size: 80px; color: var(--gold); margin: 30px 0 10px;
+  }
+  .up-success-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; color: var(--dark);
+  }
+  .up-shared {
+    margin-top: 20px;
+    font-style: italic;
+    color: #7a6a52;
+    font-size: 18px;
+  }
+  .up-progress {
+    font-style: italic; color: var(--gold); font-size: 20px; margin-top: 10px;
+  }
+
+  /* ---------- GUEST ---------- */
+  .guest {
+    min-height: 100vh;
+    background: var(--dark);
+    color: var(--cream);
+    padding: 28px 22px 120px;
+    position: relative;
+  }
+  .guest-back {
+    color: var(--gold);
+    font-size: 17px;
+    font-style: italic;
+    margin-bottom: 20px;
+    display: inline-block;
+  }
+  .guest-header {
+    text-align: center; margin-bottom: 30px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(201,164,76,0.3);
+  }
+  .guest-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    color: var(--gold);
+    font-weight: 400;
+  }
+  .guest-sub { font-style: italic; color: rgba(247,240,230,0.6); font-size: 17px; }
+  .guest-card {
+    background: rgba(247,240,230,0.04);
+    border: 1px solid rgba(201,164,76,0.25);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 20px;
+    animation: fadeIn 0.8s ease;
+  }
+  .guest-badge {
+    display: inline-block;
+    padding: 4px 14px;
+    background: rgba(201,164,76,0.15);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--gold);
+    margin-bottom: 16px;
+    letter-spacing: 0.06em;
+  }
+  .guest-orig {
+    font-size: 22px;
+    line-height: 1.5;
+    color: rgba(247,240,230,0.65);
+    padding-bottom: 16px;
+    border-bottom: 1px dashed rgba(201,164,76,0.2);
+    margin-bottom: 16px;
+  }
+  .guest-orig.ja { font-family: 'Noto Serif JP', serif; }
+  .guest-orig.en { font-family: 'Playfair Display', serif; font-style: italic; }
+  .guest-trans {
+    font-size: 28px;
+    line-height: 1.45;
+    color: var(--cream);
+  }
+  .guest-trans.ja { font-family: 'Noto Serif JP', serif; font-weight: 600; }
+  .guest-trans.en { font-family: 'Playfair Display', serif; }
+  .guest-waiting {
+    text-align: center; padding: 80px 20px;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 26px;
+    color: rgba(201,164,76,0.55);
+  }
+  .guest-waiting .petal { font-size: 44px; display: block; margin-bottom: 16px; animation: pulseDot 2.6s infinite; }
+  .float-upload {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    padding: 16px 22px;
+    background: var(--gold);
+    color: var(--dark);
+    border-radius: 30px;
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 600;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+    z-index: 20;
+  }
+  .float-upload:hover { background: var(--gold-soft); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useRef, useCallback } = React;
+
+function useHashRoute() {
+  const [hash, setHash] = useState(window.location.hash || '#/');
+  useEffect(() => {
+    const handler = () => setHash(window.location.hash || '#/');
+    window.addEventListener('hashchange', handler);
+    return () => window.removeEventListener('hashchange', handler);
+  }, []);
+  return [hash, (h) => { window.location.hash = h; }];
+}
+
+function containsJapanese(s) {
+  return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(s);
+}
+function containsLatin(s) {
+  return /[A-Za-z]/.test(s);
+}
+
+// ---------- HOME ----------
+function Home({ go }) {
+  const qrRef = useRef(null);
+  useEffect(() => {
+    if (qrRef.current && window.QRCode) {
+      window.QRCode.toCanvas(qrRef.current, window.location.origin + '/#/guest', {
+        width: 220,
+        margin: 1,
+        color: { dark: '#0C0B0A', light: '#FFFFFF' },
+      });
+    }
+  }, []);
+
+  const roles = [
+    { icon: '💍', name: 'Projection', desc: 'Display live translations on the ceremony screen', go: '#/projection' },
+    { icon: '📸', name: 'Share a Photo', desc: 'Add your photo to the ceremony slideshow', go: '#/upload' },
+    { icon: '🌸', name: 'Follow Along', desc: 'See translations live on your phone', go: '#/guest' },
+  ];
+
+  return (
+    <div className="home fade-in">
+      <div className="flower-divider">✦</div>
+      <h1 className="home-title">Wedding <em>Translator</em></h1>
+      <p className="home-sub">A ceremony in two languages, one heart</p>
+
+      <div className="qr-card">
+        <canvas ref={qrRef}></canvas>
+      </div>
+      <p className="qr-caption">Scan to follow along on your phone</p>
+
+      <div className="flower-divider">❦</div>
+
+      <div className="role-grid">
+        {roles.map((r) => (
+          <div key={r.name} className="role-card" onClick={() => go(r.go)}>
+            <div className="role-icon">{r.icon}</div>
+            <div className="role-name">{r.name}</div>
+            <div className="role-desc">{r.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- PROJECTION ----------
+function Projection({ go }) {
+  const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState('');
+  const [detectedLang, setDetectedLang] = useState(null);
+  const [translation, setTranslation] = useState(null);
+  const [photoIds, setPhotoIds] = useState([]);
+  const [photoCache, setPhotoCache] = useState({});
+  const [slideIdx, setSlideIdx] = useState(0);
+  const [showOp, setShowOp] = useState(false);
+
+  const recRef = useRef(null);
+  const translatingRef = useRef(false);
+  const listeningRef = useRef(false);
+  const lastTextRef = useRef('');
+
+  // Poll state for photos
+  useEffect(() => {
+    let cancelled = false;
+    async function poll() {
+      try {
+        const r = await fetch('/api/state');
+        const s = await r.json();
+        if (cancelled) return;
+        if (s.translation) setTranslation(s.translation);
+        if (s.photoIds && s.photoIds.length !== photoIds.length) {
+          setPhotoIds(s.photoIds);
+        }
+      } catch (e) {}
+    }
+    poll();
+    const id = setInterval(poll, 2000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [photoIds.length]);
+
+  // Fetch any photo data not yet cached
+  useEffect(() => {
+    photoIds.forEach(async (id) => {
+      if (photoCache[id]) return;
+      try {
+        const r = await fetch('/api/photos/' + id);
+        const j = await r.json();
+        setPhotoCache((c) => ({ ...c, [id]: j.dataUrl }));
+      } catch (e) {}
+    });
+  }, [photoIds]);
+
+  // Auto-advance slideshow
+  useEffect(() => {
+    if (photoIds.length < 2) return;
+    const id = setInterval(() => {
+      setSlideIdx((i) => (i + 1) % photoIds.length);
+    }, 5500);
+    return () => clearInterval(id);
+  }, [photoIds.length]);
+
+  const doTranslate = useCallback(async (text, sourceLang) => {
+    if (translatingRef.current) return;
+    translatingRef.current = true;
+    try {
+      const r = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, sourceLang }),
+      });
+      const j = await r.json();
+      if (!j.error) setTranslation(j);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      translatingRef.current = false;
+    }
+  }, []);
+
+  const setupRecognizer = useCallback(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const rec = new SR();
+    rec.lang = 'ja-JP';
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = (ev) => {
+      let interimText = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const res = ev.results[i];
+        const transcript = res[0].transcript;
+        if (res.isFinal) {
+          const txt = transcript.trim();
+          if (!txt || txt === lastTextRef.current) continue;
+          const isJa = /[\u3040-\u30ff\u4e00-\u9fff]/.test(txt);
+          const isEn = /^[\x00-\x7F]*$/.test(txt) && /[A-Za-z]/.test(txt);
+          if (!isJa && !isEn) continue;
+          lastTextRef.current = txt;
+          setInterim('');
+          const srcLang = isJa ? 'ja' : 'en';
+          setDetectedLang(srcLang);
+          doTranslate(txt, srcLang);
+        } else {
+          interimText += transcript;
+        }
+      }
+      if (interimText) setInterim(interimText);
+    };
+    rec.onerror = (e) => {
+      if (e.error !== 'no-speech' && e.error !== 'aborted') {
+        console.warn('speech error', e.error);
+      }
+    };
+    rec.onend = () => {
+      if (listeningRef.current) {
+        try { rec.start(); } catch (e) {}
+      }
+    };
+    return rec;
+  }, [doTranslate]);
+
+  const startListening = () => {
+    if (listeningRef.current) return;
+    if (!recRef.current) recRef.current = setupRecognizer();
+    if (!recRef.current) {
+      alert('Speech recognition is not supported in this browser. Use Chrome or Edge.');
+      return;
+    }
+    listeningRef.current = true;
+    setListening(true);
+    try { recRef.current.start(); } catch (e) {}
+  };
+  const stopListening = () => {
+    listeningRef.current = false;
+    setListening(false);
+    try { recRef.current && recRef.current.stop(); } catch (e) {}
+  };
+
+  const prevPhoto = () => setSlideIdx((i) => (i - 1 + photoIds.length) % photoIds.length);
+  const nextPhoto = () => setSlideIdx((i) => (i + 1) % photoIds.length);
+
+  return (
+    <div className="projection">
+      <div className="slideshow">
+        {photoIds.length === 0 && <div className="slide-empty">🌸 Awaiting photos from guests 🌸</div>}
+        {photoIds.map((id, i) => (
+          <div
+            key={id}
+            className={'slide' + (i === slideIdx ? ' active' : '')}
+            style={{ backgroundImage: photoCache[id] ? `url(${photoCache[id]})` : 'none' }}
+          />
+        ))}
+        {photoIds.length > 1 && (
+          <>
+            <button className="slide-nav prev" onClick={prevPhoto}>‹</button>
+            <button className="slide-nav next" onClick={nextPhoto}>›</button>
+            <div className="slide-dots">
+              {photoIds.map((_, i) => (
+                <div key={i} className={'slide-dot' + (i === slideIdx ? ' active' : '')} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="translation-panel">
+        {translation ? (
+          <>
+            <div className={'tx-line tx-original ' + translation.sourceLang}>
+              {translation.original}
+            </div>
+            <div className={'tx-line tx-translated ' + translation.targetLang}>
+              {translation.translated}
+            </div>
+          </>
+        ) : (
+          <div className="tx-waiting">Begin when ready… ❦</div>
+        )}
+      </div>
+
+      <button className="gear-btn" onClick={() => setShowOp(!showOp)} title="Operator panel">⚙</button>
+
+      {showOp && (
+        <div className="op-panel">
+          <h3>Operator</h3>
+          <button
+            className={'mic-btn' + (listening ? ' listening' : '')}
+            onClick={listening ? stopListening : startListening}
+          >
+            {listening ? 'Listening… 🎌🇺🇸' : '🎙 Start Listening'}
+          </button>
+          <div className="lang-badge">
+            {detectedLang ? `Detected: ${detectedLang === 'ja' ? '日本語' : 'English'}` : 'Auto-detect: JA ⇄ EN'}
+          </div>
+          <div className="interim">{interim || '…'}</div>
+          <div className="photo-count">{photoIds.length} photo{photoIds.length !== 1 ? 's' : ''} in slideshow</div>
+          <button
+            style={{ marginTop: 12, fontSize: 14, color: 'rgba(247,240,230,0.55)', fontStyle: 'italic' }}
+            onClick={() => go('#/')}
+          >
+            ← Back to home
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- UPLOAD ----------
+function Upload({ go }) {
+  const [status, setStatus] = useState('idle'); // idle, compressing, uploading, done
+  const [shared, setShared] = useState(0);
+  const fileRef = useRef(null);
+
+  const compress = (file) => new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = (e) => { img.src = e.target.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      const maxDim = 1200;
+      let { width, height } = img;
+      if (width > height && width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; }
+      else if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.74));
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    setStatus('compressing');
+    try {
+      const dataUrl = await compress(file);
+      setStatus('uploading');
+      const r = await fetch('/api/photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl }),
+      });
+      if (!r.ok) throw new Error('upload failed');
+      setShared((n) => n + 1);
+      setStatus('done');
+      setTimeout(() => setStatus('idle'), 2600);
+    } catch (e) {
+      alert('Upload failed: ' + e.message);
+      setStatus('idle');
+    }
+  };
+
+  return (
+    <div className="upload fade-in">
+      <button className="up-back" onClick={() => go('#/')}>← Home</button>
+      <div className="up-header">
+        <div style={{ fontSize: 40 }}>🌸</div>
+        <div className="up-title">Share a Moment</div>
+        <div className="up-sub">Your photo will appear on the ceremony screen</div>
+      </div>
+
+      {status === 'done' ? (
+        <div style={{ textAlign: 'center' }}>
+          <div className="up-success">❦</div>
+          <div className="up-success-text">Thank you — shared with love</div>
+        </div>
+      ) : (
+        <div className="up-dropzone" onClick={() => fileRef.current && fileRef.current.click()}>
+          {status === 'idle' && (
+            <>
+              <div className="icon">📸</div>
+              <div className="label">Tap to choose a photo</div>
+              <div className="hint">or take one with your camera</div>
+            </>
+          )}
+          {status === 'compressing' && <div className="up-progress">Preparing your photo…</div>}
+          {status === 'uploading' && <div className="up-progress">Sending with love…</div>}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: 'none' }}
+            onChange={(e) => handleFile(e.target.files && e.target.files[0])}
+          />
+        </div>
+      )}
+
+      {shared > 0 && (
+        <div className="up-shared">You have shared {shared} photo{shared !== 1 ? 's' : ''} ✦</div>
+      )}
+    </div>
+  );
+}
+
+// ---------- GUEST ----------
+function Guest({ go }) {
+  const [translation, setTranslation] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function poll() {
+      try {
+        const r = await fetch('/api/state');
+        const s = await r.json();
+        if (!cancelled && s.translation) setTranslation(s.translation);
+      } catch (e) {}
+    }
+    poll();
+    const id = setInterval(poll, 1500);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  return (
+    <div className="guest fade-in">
+      <button className="guest-back" onClick={() => go('#/')}>← Home</button>
+      <div className="guest-header">
+        <div className="guest-title">🌸 Follow Along 🌸</div>
+        <div className="guest-sub">Live translation for the ceremony</div>
+      </div>
+
+      {translation ? (
+        <div key={translation.timestamp} className="guest-card">
+          <div className="guest-badge">
+            {translation.sourceLang === 'ja' ? '日本語 → English' : 'English → 日本語'}
+          </div>
+          <div className={'guest-orig ' + translation.sourceLang}>
+            {translation.original}
+          </div>
+          <div className={'guest-trans ' + translation.targetLang}>
+            {translation.translated}
+          </div>
+        </div>
+      ) : (
+        <div className="guest-waiting">
+          <span className="petal">🌸</span>
+          The ceremony is about to begin…
+        </div>
+      )}
+
+      <button className="float-upload" onClick={() => go('#/upload')}>📸 Share a Photo</button>
+    </div>
+  );
+}
+
+// ---------- APP ----------
+function App() {
+  const [hash, go] = useHashRoute();
+  if (hash.startsWith('#/projection')) return <Projection go={go} />;
+  if (hash.startsWith('#/upload')) return <Upload go={go} />;
+  if (hash.startsWith('#/guest')) return <Guest go={go} />;
+  return <Home go={go} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
