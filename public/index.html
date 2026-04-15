@@ -533,6 +533,7 @@ function Projection({ go }) {
   const [showOp, setShowOp] = useState(false);
 
   const recRef = useRef(null);
+  const watchdogRef = useRef(null);
   const translatingRef = useRef(false);
   const listeningRef = useRef(false);
   const lastTextRef = useRef('');
@@ -592,7 +593,7 @@ function Projection({ go }) {
       console.error(e);
     } finally {
       translatingRef.current = false;
-      lastTextRef.current = '';
+      setTimeout(() => { lastTextRef.current = ''; }, 2000);
     }
   }, []);
 
@@ -626,17 +627,14 @@ function Projection({ go }) {
         console.warn('speech error', e.error);
       }
     };
-    rec.onend = () => {
-      if (listeningRef.current) {
-        setTimeout(() => {
-          if (listeningRef.current) {
-            try { rec.start(); } catch (e) {}
-          }
-        }, 250);
-      }
-    };
     return rec;
   }, [doTranslate]);
+
+  const startWatchdog = () => {
+    if (listeningRef.current && !translatingRef.current) {
+      try { recRef.current && recRef.current.start(); } catch (e) {}
+    }
+  };
 
   const startListening = () => {
     if (listeningRef.current) return;
@@ -648,10 +646,12 @@ function Projection({ go }) {
     listeningRef.current = true;
     setListening(true);
     try { recRef.current.start(); } catch (e) {}
+    watchdogRef.current = setInterval(startWatchdog, 1500);
   };
   const stopListening = () => {
     listeningRef.current = false;
     setListening(false);
+    clearInterval(watchdogRef.current);
     try { recRef.current && recRef.current.stop(); } catch (e) {}
   };
 
