@@ -524,7 +524,7 @@ function Home({ go }) {
 function Projection({ go }) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState('');
-  const [detectedLang, setDetectedLang] = useState(null);
+  const [currentLang, setCurrentLang] = useState('ja');
   const [translation, setTranslation] = useState(null);
   const [photoIds, setPhotoIds] = useState([]);
   const [photoCache, setPhotoCache] = useState({});
@@ -532,6 +532,7 @@ function Projection({ go }) {
   const [showOp, setShowOp] = useState(false);
 
   const recRef = useRef(null);
+  const langRef = useRef('ja');
   const translatingRef = useRef(false);
   const listeningRef = useRef(false);
   const lastTextRef = useRef('');
@@ -598,7 +599,7 @@ function Projection({ go }) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return null;
     const rec = new SR();
-    rec.lang = 'ja-JP';
+    rec.lang = langRef.current === 'ja' ? 'ja-JP' : 'en-US';
     rec.continuous = true;
     rec.interimResults = true;
     rec.onresult = (ev) => {
@@ -609,12 +610,9 @@ function Projection({ go }) {
         if (res.isFinal) {
           const txt = transcript.trim();
           if (!txt || txt === lastTextRef.current) continue;
-          const isJa = /[\u3040-\u30ff\u4e00-\u9fff]/.test(txt);
           lastTextRef.current = txt;
           setInterim('');
-          const srcLang = isJa ? 'ja' : 'en';
-          setDetectedLang(srcLang);
-          doTranslate(txt, srcLang);
+          doTranslate(txt, langRef.current);
         } else {
           interimText += transcript;
         }
@@ -628,7 +626,11 @@ function Projection({ go }) {
     };
     rec.onend = () => {
       if (listeningRef.current) {
-        try { rec.start(); } catch (e) {}
+        setTimeout(() => {
+          if (listeningRef.current) {
+            try { rec.start(); } catch (e) {}
+          }
+        }, 250);
       }
     };
     return rec;
@@ -649,6 +651,17 @@ function Projection({ go }) {
     listeningRef.current = false;
     setListening(false);
     try { recRef.current && recRef.current.stop(); } catch (e) {}
+  };
+
+  const setLanguage = (lang) => {
+    langRef.current = lang;
+    setCurrentLang(lang);
+    if (recRef.current) {
+      recRef.current.lang = lang === 'ja' ? 'ja-JP' : 'en-US';
+      if (listeningRef.current) {
+        try { recRef.current.stop(); } catch (e) {}
+      }
+    }
   };
 
   const prevPhoto = () => setSlideIdx((i) => (i - 1 + photoIds.length) % photoIds.length);
@@ -698,15 +711,46 @@ function Projection({ go }) {
       {showOp && (
         <div className="op-panel">
           <h3>Operator</h3>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <button
+              className="lang-pick"
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: 8,
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 16,
+                background: currentLang === 'ja' ? 'var(--gold)' : 'rgba(201,164,76,0.15)',
+                color: currentLang === 'ja' ? 'var(--dark)' : 'var(--cream)',
+                border: '1px solid rgba(201,164,76,0.5)',
+              }}
+              onClick={() => setLanguage('ja')}
+            >
+              🎌 Japanese
+            </button>
+            <button
+              className="lang-pick"
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: 8,
+                fontFamily: "'Playfair Display', serif",
+                fontSize: 16,
+                background: currentLang === 'en' ? 'var(--gold)' : 'rgba(201,164,76,0.15)',
+                color: currentLang === 'en' ? 'var(--dark)' : 'var(--cream)',
+                border: '1px solid rgba(201,164,76,0.5)',
+              }}
+              onClick={() => setLanguage('en')}
+            >
+              🇺🇸 English
+            </button>
+          </div>
           <button
             className={'mic-btn' + (listening ? ' listening' : '')}
             onClick={listening ? stopListening : startListening}
           >
-            {listening ? 'Listening… 🎌🇺🇸' : '🎙 Start Listening'}
+            {listening ? '● Listening — tap to stop' : '🎙 Start Listening'}
           </button>
-          <div className="lang-badge">
-            {detectedLang ? `Detected: ${detectedLang === 'ja' ? '日本語' : 'English'}` : 'Auto-detect: JA ⇄ EN'}
-          </div>
           <div className="interim">{interim || '…'}</div>
           <div className="photo-count">{photoIds.length} photo{photoIds.length !== 1 ? 's' : ''} in slideshow</div>
           <button
