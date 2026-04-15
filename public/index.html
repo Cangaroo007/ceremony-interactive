@@ -204,17 +204,17 @@
   }
   .tx-line { animation: fadeIn 0.8s ease; }
   .tx-original {
-    font-size: clamp(28px, 3.2vw, 44px);
+    font-size: clamp(1.2rem, 2.8vw, 2.1rem);
     line-height: 1.4;
-    color: rgba(247,240,230,0.75);
+    color: #9A8570;
     font-weight: 400;
   }
   .tx-original.ja { font-family: 'Noto Serif JP', serif; }
   .tx-original.en { font-family: 'Playfair Display', serif; font-style: italic; }
   .tx-translated {
-    font-size: clamp(34px, 3.8vw, 56px);
+    font-size: clamp(1.5rem, 3.8vw, 3rem);
     line-height: 1.35;
-    color: var(--cream);
+    color: #F2ECE4;
     font-weight: 400;
   }
   .tx-translated.ja { font-family: 'Noto Serif JP', serif; font-weight: 600; }
@@ -224,7 +224,7 @@
     font-family: 'Playfair Display', serif;
     font-style: italic;
     font-size: clamp(26px, 3vw, 38px);
-    color: rgba(201,164,76,0.6);
+    color: #6A5640;
   }
 
   .gear-btn {
@@ -524,7 +524,6 @@ function Home({ go }) {
 function Projection({ go }) {
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState('');
-  const [currentLang, setCurrentLang] = useState('ja');
   const [translation, setTranslation] = useState(null);
   const [photoIds, setPhotoIds] = useState([]);
   const [photoCache, setPhotoCache] = useState({});
@@ -532,7 +531,6 @@ function Projection({ go }) {
   const [showOp, setShowOp] = useState(false);
 
   const recRef = useRef(null);
-  const langRef = useRef('ja');
   const translatingRef = useRef(false);
   const listeningRef = useRef(false);
   const lastTextRef = useRef('');
@@ -599,7 +597,7 @@ function Projection({ go }) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return null;
     const rec = new SR();
-    rec.lang = langRef.current === 'ja' ? 'ja-JP' : 'en-US';
+    rec.lang = 'ja-JP';
     rec.continuous = true;
     rec.interimResults = true;
     rec.onresult = (ev) => {
@@ -612,7 +610,8 @@ function Projection({ go }) {
           if (!txt || txt === lastTextRef.current) continue;
           lastTextRef.current = txt;
           setInterim('');
-          doTranslate(txt, langRef.current);
+          const isJa = /[\u3040-\u30ff\u4e00-\u9fff]/.test(txt);
+          doTranslate(txt, isJa ? 'ja' : 'en');
         } else {
           interimText += transcript;
         }
@@ -651,17 +650,6 @@ function Projection({ go }) {
     listeningRef.current = false;
     setListening(false);
     try { recRef.current && recRef.current.stop(); } catch (e) {}
-  };
-
-  const setLanguage = (lang) => {
-    langRef.current = lang;
-    setCurrentLang(lang);
-    if (recRef.current) {
-      recRef.current.lang = lang === 'ja' ? 'ja-JP' : 'en-US';
-      if (listeningRef.current) {
-        try { recRef.current.stop(); } catch (e) {}
-      }
-    }
   };
 
   const prevPhoto = () => setSlideIdx((i) => (i - 1 + photoIds.length) % photoIds.length);
@@ -711,46 +699,13 @@ function Projection({ go }) {
       {showOp && (
         <div className="op-panel">
           <h3>Operator</h3>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <button
-              className="lang-pick"
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: 8,
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 16,
-                background: currentLang === 'ja' ? 'var(--gold)' : 'rgba(201,164,76,0.15)',
-                color: currentLang === 'ja' ? 'var(--dark)' : 'var(--cream)',
-                border: '1px solid rgba(201,164,76,0.5)',
-              }}
-              onClick={() => setLanguage('ja')}
-            >
-              🎌 Japanese
-            </button>
-            <button
-              className="lang-pick"
-              style={{
-                flex: 1,
-                padding: '10px',
-                borderRadius: 8,
-                fontFamily: "'Playfair Display', serif",
-                fontSize: 16,
-                background: currentLang === 'en' ? 'var(--gold)' : 'rgba(201,164,76,0.15)',
-                color: currentLang === 'en' ? 'var(--dark)' : 'var(--cream)',
-                border: '1px solid rgba(201,164,76,0.5)',
-              }}
-              onClick={() => setLanguage('en')}
-            >
-              🇺🇸 English
-            </button>
-          </div>
           <button
             className={'mic-btn' + (listening ? ' listening' : '')}
             onClick={listening ? stopListening : startListening}
           >
             {listening ? '● Listening — tap to stop' : '🎙 Start Listening'}
           </button>
+          <div className="lang-badge">🎌 🇺🇸 Auto-detecting</div>
           <div className="interim">{interim || '…'}</div>
           <div className="photo-count">{photoIds.length} photo{photoIds.length !== 1 ? 's' : ''} in slideshow</div>
           <button
