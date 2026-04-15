@@ -533,10 +533,7 @@ function Projection({ go }) {
   const [showOp, setShowOp] = useState(false);
 
   const recRef = useRef(null);
-  const watchdogRef = useRef(null);
-  const translatingRef = useRef(false);
   const listeningRef = useRef(false);
-  const lastTextRef = useRef('');
 
   // Poll state for photos
   useEffect(() => {
@@ -578,81 +575,52 @@ function Projection({ go }) {
     return () => clearInterval(id);
   }, [photoIds.length]);
 
-  const doTranslate = useCallback(async (text, sourceLang) => {
-    if (translatingRef.current) return;
-    translatingRef.current = true;
+  const doTranslate = async (text) => {
+    const isJa = /[\u3040-\u30ff\u4e00-\u9fff]/.test(text);
     try {
       const r = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, sourceLang }),
+        body: JSON.stringify({ text, sourceLang: isJa ? 'ja' : 'en' })
       });
       const j = await r.json();
-      if (!j.error) setTranslation(j);
+      if (j.translated) setTranslation(j);
     } catch (e) {
-      console.error(e);
-    } finally {
-      translatingRef.current = false;
-      setTimeout(() => { lastTextRef.current = ''; }, 2000);
+      console.error('translate error', e);
     }
-  }, []);
+  };
 
-  const setupRecognizer = useCallback(() => {
+  const startListening = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) return null;
+    if (!SR) { alert('Please use Chrome'); return; }
     const rec = new SR();
     rec.lang = 'ja-JP';
     rec.continuous = true;
     rec.interimResults = true;
     rec.onresult = (ev) => {
-      let interimText = '';
+      let interim = '';
       for (let i = ev.resultIndex; i < ev.results.length; i++) {
-        const res = ev.results[i];
-        const transcript = res[0].transcript;
-        if (res.isFinal) {
-          const txt = transcript.trim();
-          if (!txt || txt === lastTextRef.current) continue;
-          lastTextRef.current = txt;
-          setInterim('');
-          const isJa = /[\u3040-\u30ff\u4e00-\u9fff]/.test(txt);
-          doTranslate(txt, isJa ? 'ja' : 'en');
+        if (ev.results[i].isFinal) {
+          const txt = ev.results[i][0].transcript.trim();
+          if (txt) doTranslate(txt);
         } else {
-          interimText += transcript;
+          interim += ev.results[i][0].transcript;
         }
       }
-      if (interimText) setInterim(interimText);
+      setInterim(interim);
     };
-    rec.onerror = (e) => {
-      if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        console.warn('speech error', e.error);
-      }
-    };
-    return rec;
-  }, [doTranslate]);
-
-  const startWatchdog = () => {
-    if (listeningRef.current && !translatingRef.current) {
-      try { recRef.current && recRef.current.start(); } catch (e) {}
-    }
-  };
-
-  const startListening = () => {
-    if (listeningRef.current) return;
-    if (!recRef.current) recRef.current = setupRecognizer();
-    if (!recRef.current) {
-      alert('Speech recognition is not supported in this browser. Use Chrome or Edge.');
-      return;
-    }
+    rec.onerror = (e) => console.warn('speech error', e.error);
+    rec.onend = () => { if (listeningRef.current) rec.start(); };
+    recRef.current = rec;
     listeningRef.current = true;
     setListening(true);
-    try { recRef.current.start(); } catch (e) {}
-    watchdogRef.current = setInterval(startWatchdog, 1500);
+    rec.start();
   };
+
   const stopListening = () => {
     listeningRef.current = false;
     setListening(false);
-    clearInterval(watchdogRef.current);
-    try { recRef.current && recRef.current.stop(); } catch (e) {}
+    if (recRef.current) recRef.current.stop();
   };
 
   const prevPhoto = () => setSlideIdx((i) => (i - 1 + photoIds.length) % photoIds.length);
