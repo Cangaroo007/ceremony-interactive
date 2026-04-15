@@ -186,8 +186,10 @@
 
   .translation-panel {
     flex: 1;
-    padding: 40px 72px;
+    padding: 40px 10vw;
     display: flex; flex-direction: column; justify-content: center;
+    align-items: center;
+    text-align: center;
     gap: 28px;
     background: linear-gradient(180deg, #0C0B0A 0%, #14110E 100%);
     border-top: 1px solid rgba(201,164,76,0.3);
@@ -590,6 +592,7 @@ function Projection({ go }) {
       console.error(e);
     } finally {
       translatingRef.current = false;
+      lastTextRef.current = '';
     }
   }, []);
 
